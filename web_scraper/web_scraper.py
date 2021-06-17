@@ -1,5 +1,6 @@
 import json
 import re
+import os
 
 import ssl
 from urllib.request import Request, urlopen
@@ -13,6 +14,8 @@ BASE_URL = "https://www.indeed.com/"
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def main():
     name_of_city = "New York City"
@@ -28,7 +31,7 @@ def main():
 
     data_collected = scrape_data(url_to_scrape, number_of_pages)
 
-    with open('data.json', "w") as file:
+    with open(dir_path + '/data.json', "w") as file:
         json.dump(data_collected, file, sort_keys=True, indent = 4, ensure_ascii=False)
 
 def scrape_data(url, number_of_pages):
