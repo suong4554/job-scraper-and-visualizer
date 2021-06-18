@@ -19,8 +19,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def main():
     name_of_city = "New York City"
-    keywords = "datascience"
-    number_of_pages = 10
+    keywords = "data science"
+    number_of_pages = 5
 
     #Preprocess data
     name_of_city = name_of_city.replace(" ", "+")
@@ -62,9 +62,11 @@ def get_data_html(data_collected, data_raw):
         req = Request(single_job_post_extension_url, headers= {'User-Agent': 'Mozilla/5.0'})
         web_page = urlopen(req).read()
         job_raw = bs(web_page, 'html.parser')
-
-        for inside_div in job_raw.findAll('div', attrs={"class": "jobsearch-jobsearch-jobDescriptionText"}):
-            details = inside_div.text.strip()[:100] + "..."
+        print(job_raw)
+        for inside_div in job_raw.findAll('div', attrs={"class": "jobsearch-jobDescriptionText"}):
+            print(inside_div.text)
+            break
+            details = inside_div.text.strip()
             job["details"] = details.replace(" +", "")
         data_collected.append(job)
     return data_collected
