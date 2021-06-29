@@ -2,6 +2,17 @@ import pandas as pd
 
 
 extra_skills = [
+    "model Ops",
+    "streaming",
+    "pytorch",
+    "a/b testing",
+    "knowledge graph",
+    "network graph",
+    "knowledge sharing",
+    "prediction",
+    "forecasting",
+    "clustering",
+    "cloud",
     "statistics",
     "machine learning",
     "NLP",
@@ -33,7 +44,6 @@ extra_skills = [
     "unsupervised machine learning",
     "Python",
     "SQL",
-    "Sql",
     "Spark",
     "Hadoop",
     "Elasticsearch",
@@ -89,3 +99,12 @@ def extract_key_word_count(df, extra_skills = extra_skills):
     
     return results
 
+def extract_company(df):
+    skills = df.skill.unique().tolist()
+    skill_company_dict = {}
+    for skill in skills:
+        filtered_df = df[df.skill == skill]
+        original_df = filtered_df.drop(columns=["skill"]).drop_duplicates()
+        skill_company_dict[skill] = original_df.to_dict(orient='records')   
+    
+    return skill_company_dict
