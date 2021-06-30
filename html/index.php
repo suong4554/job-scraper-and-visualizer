@@ -16,7 +16,6 @@ $company = file_get_contents('data/company_breakdown.json');
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <title>Home Page</title>
-  <LINK href="styles.css" rel="stylesheet" type="text/css">
 </head>
 
 
@@ -41,38 +40,17 @@ $company = file_get_contents('data/company_breakdown.json');
 </style>
 
 <!-- Resources -->
-<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
-<script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+<?php include 'dependencies.php';?>
 
 
 
 <body>
 
 
-<nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Mazu</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-      <div class="navbar-nav">
-        <a class="nav-link active" aria-current="page" href="#">Home</a>
-        <a class="nav-link d-flex" href="#" style='float: right'>About Us</a>
-      </div>
-    </div>
-  </div>
-</nav>
+<?php include 'navbar.php';?>
 
 <!-- HTML -->
 <div class"container">
-  <div class="row" >
-
-  </div>
 
   <div class="row">
     <div id="chartdiv" class="col-sm"></div>
@@ -306,6 +284,14 @@ pieSeries.hiddenState.properties.opacity = 1;
 pieSeries.hiddenState.properties.endAngle = -90;
 pieSeries.hiddenState.properties.startAngle = -90;
 
+
+pieSeries.slices.template.events.on("hit", function(ev){
+  skill = ev.target.dataItem.category
+  console.log(skill)
+  window.open("skill_company.php?skill=" + skill,"_self")
+});
+
+
 var title = chart.titles.create();
 title.text = "Top 18 Key Word Distribution (Total)";
 title.fontSize = 25;
@@ -345,6 +331,7 @@ for (var key in dataset){
     else{
       temp.name = key
     }
+    temp.raw = key
     var temp_arr = []
     for (var data_key in dataset[key]){
       var temp_data = {
@@ -420,6 +407,21 @@ level1ColumnTemplate.fillOpacity = 1;
 level1ColumnTemplate.strokeWidth = 4;
 level1ColumnTemplate.stroke = bgColor;
 level1ColumnTemplate.tooltipText = "{name}: {value}"
+
+
+function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+
+level1ColumnTemplate.events.on("hit", function(ev){
+  skill = ev.target.dataItem.dataContext.name
+  city = htmlEntities(ev.target.dataItem.dataContext.parent.dataContext.raw)
+  window.open("skill_company.php?skill=" + skill + "&city=" + city,"_self")
+});
+
+
+
 
 var bullet1 = level1SeriesTemplate.bullets.push(new am4charts.LabelBullet());
 bullet1.locationY = 0.5;

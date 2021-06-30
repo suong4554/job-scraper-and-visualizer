@@ -106,5 +106,8 @@ def extract_company(df):
         filtered_df = df[df.skill == skill]
         original_df = filtered_df.drop(columns=["skill"]).drop_duplicates()
         skill_company_dict[skill] = original_df.to_dict(orient='records')   
+    original_df = df.drop(columns=["skill"]).drop_duplicates()
+    skill_company_dict["total"] = original_df.to_dict(orient='records')   
+    
     
     return skill_company_dict
