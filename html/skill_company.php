@@ -1,6 +1,14 @@
 <?php
 
+$datafile = "predefined";
+if(isset($_GET['dataset'])){
+  $datafile = $_GET['dataset'];
+}
+
 $data = file_get_contents('data/company_skill_distribution.json');
+if ($datafile=="nltk"){
+  $data = file_get_contents('data/company_phrase_distribution.json');
+}
 
 
 if(isset($_GET['skill'])){
@@ -16,7 +24,12 @@ if(isset($_GET['city'])){
 else{
   $city = "All Locations";
 }
-
+if(isset($_GET['company'])){
+  $company = $_GET['company'];
+}
+else{
+  $company = "";
+}
 
 
 
@@ -32,12 +45,14 @@ else{
 
 #company {
   width: 50%;
-  height: 1000px;
+  min-width:700px;
 }
-#chartdiv_company {
+#chartdiv_bar {
   width: 50%;
+  min-width:500px;
   height: 1000px;
   padding-top: 25px;
+
 }
 </style>
 
@@ -54,8 +69,19 @@ else{
   <div class"container">
 
     <div class="row">
+
       <div id="company" class="col-sm">
         <h3 id="title_listing" class="pl-3 pt-2" > </h3>
+        <div class="dropdown show pl-3" >
+          <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" >
+            Sort
+          </a>
+
+          <div class="dropdown-menu" aria-labelledby="dropdownMenuLink" >
+            <a class="dropdown-item" value="name" href="javascript:sort_alphabetical(sortable, result_dataset)">Company Name</a>
+            <a class="dropdown-item" value="number" href="javascript:sort_number(sortable, result_dataset)">Number of Listings</a>
+          </div>
+        </div>
         <div class="card-deck" id="job_card_deck">
         </div>
 
@@ -78,6 +104,8 @@ var city = "<?php echo $city; ?>";
 
 var skill = "<?php echo $skill; ?>";
 
+var company = "<?php echo $company; ?>";
+
 //console.log(dataset[skill])
 
 dataset = dataset[skill]
@@ -91,7 +119,7 @@ var company_count = {}
 for (listing in dataset){
   listing = dataset[listing]
   if(listing.city == city || city == "All Locations"){
-    if(listing.companyName){
+    if(listing.companyName && (listing.companyName == company || company == "")){
       result_dataset.push(listing)
     }
     if (company_count.hasOwnProperty(listing.companyName)){
@@ -103,37 +131,103 @@ for (listing in dataset){
   }
 }
 
+var sortable = [];
+for (var company in company_count) {
+    sortable.push([company, company_count[company]]);
+}
+
+sortable.sort(function(a, b) {
+    return  b[1] - a[1];
+});
+
+
 result_dataset.sort(function( a , b ){
   var result = a.companyName.toLowerCase() == b.companyName.toLowerCase() ? 0 : b.companyName.toLowerCase() > a.companyName.toLowerCase() ? -1 : 1
   return result ;
  });
 
-var card_deck = ""
-for (listing in result_dataset){
-  listing = result_dataset[listing]
-  card_deck +=`
-  <div class="col-sm-4 p-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <a href="${listing.url}"> <h5 class="card-title">${listing.companyName}: <br> ${listing.title}</h5> </a>
-        <h6 class="card-subtitle mb-2 text-muted"></h6>
-        <h6 class="card-subtitle mb-2 text-muted">${listing.location}</h6>
-        <p class="card-text">${listing.summary}</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-muted">${listing.date}</small>
-      </div>
-    </div>
-  </div>`
+
+
+function sort_number(sortable=sortable, result_dataset=result_dataset){
+  console.log("number")
+  var card_deck = ""
+  for (company in sortable){
+    company = sortable[company][0]
+    for (listing in result_dataset){
+      listing = result_dataset[listing]
+      if (listing.companyName == company){
+
+        card_deck +=`
+        <div class="col-sm-4 p-3">
+          <div class="card h-100" style="min-width:200px">
+            <div class="card-body">
+              <a href="${listing.url}"> <h5 class="card-title">${listing.companyName}: <br> ${listing.title}</h5> </a>
+              <h6 class="card-subtitle mb-2 text-muted"></h6>
+              <h6 class="card-subtitle mb-2 text-muted">${listing.location}</h6>
+              <p class="card-text">${listing.summary}</p>
+            </div>
+            <div class="card-footer">
+              <small class="text-muted">${listing.date}</small>
+            </div>
+          </div>
+        </div>`
+      }
+    }
+  }
+  if (city == "All Locations"){
+    document.getElementById("title_listing").innerHTML = city + ": " + "<?php echo $skill; ?>";
+  }
+  else{
+    document.getElementById("title_listing").innerHTML = listing.location + ": " + "<?php echo $skill; ?>";
+  }
+  document.getElementById("job_card_deck").innerHTML = card_deck;
 }
 
-if (city == "All Locations"){
-  document.getElementById("title_listing").innerHTML = city + ": " + "<?php echo $skill; ?>";
+
+function sort_alphabetical(sortable=sortable, result_dataset=result_dataset){
+  var card_deck = ""
+  for (listing in result_dataset){
+    listing = result_dataset[listing]
+    card_deck +=`
+    <div class="col-sm-4 p-3">
+      <div class="card h-100" style="min-width:200px">
+        <div class="card-body">
+          <a href="${listing.url}"> <h5 class="card-title">${listing.companyName}: <br> ${listing.title}</h5> </a>
+          <h6 class="card-subtitle mb-2 text-muted"></h6>
+          <h6 class="card-subtitle mb-2 text-muted">${listing.location}</h6>
+          <p class="card-text">${listing.summary}</p>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">${listing.date}</small>
+        </div>
+      </div>
+    </div>`
+  }
+
+
+  if (city == "All Locations"){
+    document.getElementById("title_listing").innerHTML = city + ": " + "<?php echo $skill; ?>";
+  }
+  else{
+    document.getElementById("title_listing").innerHTML = listing.location + ": " + "<?php echo $skill; ?>";
+  }
+  document.getElementById("job_card_deck").innerHTML = card_deck;
 }
-else{
-  document.getElementById("title_listing").innerHTML = listing.location + ": " + "<?php echo $skill; ?>";
+
+function sort_this(value){
+  console.log(value)
+  if (value == "number"){
+    sort_number(sortable, result_dataset)
+  }
+  else if (value == "name"){
+    sort_alphabetical(sortable, result_dataset)
+  }
 }
-document.getElementById("job_card_deck").innerHTML = card_deck;
+
+
+
+sort_number(sortable, result_dataset)
+
 
 
 
@@ -200,6 +294,18 @@ title.marginBottom = 30;
 series.columns.template.adapter.add("fill", function(fill, target){
   return chart.colors.getIndex(target.dataItem.index);
 });
+
+function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+//Need to edit this later: search by company
+series.columns.template.events.on("hit", function(ev){
+  company = ev.target.dataItem.categoryY
+  company = htmlEntities(company)
+  console.log(company)
+  window.open("skill_company.php?company=" + company,"_self")
+});
+
 
 categoryAxis.sortBySeries = series;
 }); // end am4core.ready()

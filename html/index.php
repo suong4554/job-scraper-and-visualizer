@@ -1,7 +1,17 @@
 
 <?php
 
+$datafile = "predefined";
+if(isset($_GET['dataset'])){
+  $datafile = $_GET['dataset'];
+}
+
 $data = file_get_contents('data/job_skill_distribution.json');
+if ($datafile=="nltk"){
+  $data = file_get_contents('data/job_phrase_distribution.json');
+}
+
+
 
 $job_totals = file_get_contents('data/city_job_distribution.json');
 $company = file_get_contents('data/company_breakdown.json');
@@ -50,8 +60,18 @@ $company = file_get_contents('data/company_breakdown.json');
 <?php include 'navbar.php';?>
 
 <!-- HTML -->
-<div class"container">
 
+<div class="dropdown show pl-3 pt-5">
+  <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Choose Dataset
+  </a>
+
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+    <a class="dropdown-item" href=".?dataset=predefined">Pre-Defined Keywords</a>
+    <a class="dropdown-item" href=".?dataset=nltk">NLTK-Rake</a>
+  </div>
+</div>
+<div class"container">
   <div class="row">
     <div id="chartdiv" class="col-sm"></div>
 
@@ -73,7 +93,15 @@ $company = file_get_contents('data/company_breakdown.json');
 
 <script>
 
+
+function htmlEntities(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+
 var dataset = <?php echo $company; ?>;
+
+var datafile = "<?php echo $datafile ?>"
 
 var amchart_dataset_company = []
 var count = 0
@@ -136,11 +164,22 @@ series.columns.template.adapter.add("fill", function(fill, target){
   return chart.colors.getIndex(target.dataItem.index);
 });
 
+
+//Need to edit this later: search by company
+series.columns.template.events.on("hit", function(ev){
+  company = ev.target.dataItem.categoryY
+  company = htmlEntities(company)
+  console.log(company)
+  window.open("skill_company.php?dataset=" + datafile + "&company=" + company,"_self")
+});
+
+
+
 categoryAxis.sortBySeries = series;
 }); // end am4core.ready()
-</script>
 
-<script>
+
+//########################### Listing per company ###########################
 
 var dataset = <?php echo $job_totals; ?>;
 var amchart_dataset_bar = []
@@ -168,10 +207,11 @@ for (var key in dataset){
   else{
     temp.name = key
   }
+  temp.raw = key
   temp.value = dataset[key]
   amchart_dataset_bar.push(temp)
 }
-console.log(amchart_dataset_bar)
+
 am4core.ready(function() {
 
 // Themes begin
@@ -214,17 +254,21 @@ title.marginBottom = 30;
 series.columns.template.adapter.add("fill", function(fill, target){
   return chart.colors.getIndex(target.dataItem.index);
 });
+
+
+
+series.columns.template.events.on("hit", function(ev){
+  city = ev.target.dataItem.dataContext.raw
+  city = htmlEntities(city)
+  console.log(city)
+  window.open("skill_company.php?dataset=" + datafile + "&city=" + city,"_self")
+});
+
+
 categoryAxis.sortBySeries = series;
 }); // end am4core.ready()
-</script>
 
-
-
-
-
-
-<!-- Chart code -->
-<script>
+//########################### Pie ###########################
 
 var dataset = <?php echo $data ?>;
 
@@ -288,7 +332,7 @@ pieSeries.hiddenState.properties.startAngle = -90;
 pieSeries.slices.template.events.on("hit", function(ev){
   skill = ev.target.dataItem.category
   console.log(skill)
-  window.open("skill_company.php?skill=" + skill,"_self")
+  window.open("skill_company.php?dataset=" + datafile + "&skill=" + skill,"_self")
 });
 
 
@@ -297,12 +341,13 @@ title.text = "Top 18 Key Word Distribution (Total)";
 title.fontSize = 25;
 title.marginBottom = 30;
 }); // end am4core.ready()
-</script>
 
 
 
-<!-- Chart code -->
-<script>
+
+
+//########################### HEAT MAP ###########################
+
 var dataset = <?php echo $data ?>;
 var amchart_dataset = []
 
@@ -417,7 +462,7 @@ function htmlEntities(str) {
 level1ColumnTemplate.events.on("hit", function(ev){
   skill = ev.target.dataItem.dataContext.name
   city = htmlEntities(ev.target.dataItem.dataContext.parent.dataContext.raw)
-  window.open("skill_company.php?skill=" + skill + "&city=" + city,"_self")
+  window.open("skill_company.php?dataset=" + datafile + "&skill=" + skill + "&city=" + city,"_self")
 });
 
 

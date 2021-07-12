@@ -1,5 +1,5 @@
 import pandas as pd
-
+import re, string
 
 extra_skills = [
     "model Ops",
@@ -86,21 +86,35 @@ def extract_key_word_count(df, extra_skills = extra_skills):
         #row = row.to_frame()
         details = row.details
         for skill in extra_skills:
-            skill = skill.lower()
-            if skill in details.lower():
-                row["skill"] = skill
-                row_temp = row.to_frame().transpose()
-                exploded.append(row_temp)    
+            
+            process_skill = re.sub('[\W_]', '', skill)
+            if len(process_skill) == 1:
+                if skill in details:
+                    row["skill"] = skill
+                    row_temp = row.to_frame().transpose()
+                    exploded.append(row_temp)   
+            else:
+                skill = skill.lower()
+                if skill in details.lower():
+                    row["skill"] = skill
+                    row_temp = row.to_frame().transpose()
+                    exploded.append(row_temp)    
 
     results = pd.concat(exploded)
-    results.skill = results.skill.replace("r,", "R").replace(" r ", "R").replace("/r", "R").replace("r/", "R")
-    results.skill = results.skill.replace("c,", "C").replace(" c ", "C").replace("/c", "C").replace("c/", "C")
+    results.skill = results.skill.replace("R,", "R").replace(" R ", "R").replace("/R", "R").replace("R/", "R")
+    results.skill = results.skill.replace("C,", "C").replace(" C ", "C").replace("/C", "C").replace("C/", "C")
     results = results.drop_duplicates()
     
     return results
 
 def extract_company(df):
-    skills = df.skill.unique().tolist()
+    total_skills = []
+    grouped_df = df.groupby("city")
+    for city, group in grouped_df:
+        top_20_skills = group.skill.value_counts().nlargest(20).index.tolist()
+        total_skills.extend(top_20_skills)
+
+    skills = list(set(total_skills))
     skill_company_dict = {}
     for skill in skills:
         filtered_df = df[df.skill == skill]
